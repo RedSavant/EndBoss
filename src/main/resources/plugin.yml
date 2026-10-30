@@ -1,0 +1,16 @@
+name: EndBoss
+version: 2.0
+main: fr.zyumie.EndBoss.Main
+api-version: '1.21'
+author: Zyumie
+website: https://www.youtube.com/@AyanoBrz
+description: Boss de l'End en 3 phases avec IA adaptative
+commands:
+  endboss:
+    description: Commande principale du EndBoss
+    permission: endboss.admin
+    usage: /endboss <spawn [force]|kill|reload|status|unlock>
+permissions:
+  endboss.admin:
+    description: Permet de gérer le EndBoss
+    default: op
