@@ -1,0 +1,180 @@
+# =========================================================
+#   CustomItems — Configuration des Armures (CustomArmor.yml)
+# =========================================================
+
+armors:
+
+  # ── Armure Anti-Tempête ──────────────────────────────────
+  storm:
+    enabled: true
+    require-full-set: true
+    display-name: "<blue><bold>Armure Anti-Tempête"
+    lore:
+      - "<gray>Forgée dans l'œil d'une tempête millénaire."
+      - ""
+      - "<blue>✦ Immunité totale à la tempête apocalyptique"
+      - "<blue>✦ Effets et dégâts de tempête annulés"
+      - ""
+      - "<dark_gray>ID: storm_armor"
+    trim:
+      enabled: true
+      material: diamond
+      pattern: bolt
+    helmet:
+      material: DIAMOND_HELMET
+      custom-model-data: 2001
+      color: null
+    chestplate:
+      material: DIAMOND_CHESTPLATE
+      custom-model-data: 2002
+      color: null
+    leggings:
+      material: DIAMOND_LEGGINGS
+      custom-model-data: 2003
+      color: null
+    boots:
+      material: DIAMOND_BOOTS
+      custom-model-data: 2004
+      color: null
+    enchantments:
+      PROTECTION: 4
+      DURABILITY: 10
+    messages:
+      equipped:   "<blue>⛈ Armure anti-tempête enfilée. Tu es protégé."
+      unequipped: "<gray>L'armure anti-tempête a été retirée."
+
+  # ── Armure Fantôme ───────────────────────────────────────
+  ghost:
+    enabled: true
+    require-full-set: true
+    display-name: "<white><bold>Armure Fantôme"
+    lore:
+      - "<gray>L'âme de ceux qui voulaient disparaître..."
+      - ""
+      - "<white>✦ Invisibilité totale (armure + pseudo masqués)"
+      - "<red>✦ Un seul coup brise l'invisibilité 5 secondes"
+      - ""
+      - "<dark_gray>ID: ghost_armor"
+    trim:
+      enabled: false
+      material: quartz
+      pattern: silence
+    helmet:
+      material: LEATHER_HELMET
+      custom-model-data: 2011
+      color: "0x000000"
+    chestplate:
+      material: LEATHER_CHESTPLATE
+      custom-model-data: 2012
+      color: "0x000000"
+    leggings:
+      material: LEATHER_LEGGINGS
+      custom-model-data: 2013
+      color: "0x000000"
+    boots:
+      material: LEATHER_BOOTS
+      custom-model-data: 2014
+      color: "0x000000"
+    enchantments:
+      PROTECTION: 4
+      DURABILITY: 10
+
+    # ── Option Ghost : Invisibilité constante ou désactivation au coup ──
+    # true  = Invisibilité permanente, ne se désactive pas lorsqu'on prend des dégâts.
+    # false = L'invisibilité se désactive temporairement (durée ci-dessous) lorsqu'on est touché.
+    constant-invisibility: false
+    reveal-duration-seconds: 5
+
+    messages:
+      invisible:  "<white>👻 Tu es invisible."
+      revealed:   "<red>💥 Invisibilité brisée pendant <yellow>{duration}s<red> !"
+      restored:   "<white>👻 Tu redeviens invisible."
+
+  # ── Armure de Sauvetage ──────────────────────────────────
+  rescue:
+    enabled: true
+    require-full-set: false
+    display-name: "<green><bold>Armure de Sauvetage"
+    lore:
+      - "<gray>Conçue pour les situations désespérées."
+      - ""
+      - "<green>✦ Téléportation d'urgence à <yellow>1 cœur"
+      - "<green>✦ Rayon aléatoire: <yellow>{radius} blocs"
+      - "<gray>(Cooldown: <yellow>{cooldown}s<gray>)"
+      - ""
+      - "<dark_gray>ID: rescue_armor"
+    trim:
+      enabled: true
+      material: emerald
+      pattern: eye
+    helmet:
+      material: IRON_HELMET
+      custom-model-data: 2021
+      color: null
+    chestplate:
+      material: IRON_CHESTPLATE
+      custom-model-data: 2022
+      color: null
+    leggings:
+      material: IRON_LEGGINGS
+      custom-model-data: 2023
+      color: null
+    boots:
+      material: IRON_BOOTS
+      custom-model-data: 2024
+      color: null
+    enchantments:
+      PROTECTION: 4
+      DURABILITY: 10
+    teleport-radius: 15
+    trigger-health: 2.0
+    cooldown-seconds: 30
+    messages:
+      triggered: "<green>⚡ Téléportation d'urgence ! Tu as été sauvé."
+      cooldown:  "<red>Cooldown actif encore <yellow>{remaining}s<red>."
+
+  # ── Armure Voleuse d'Âmes ────────────────────────────────
+  soul:
+    enabled: true
+    require-full-set: true
+    display-name: "<dark_purple><bold>Armure Voleuse d'Âmes"
+    lore:
+      - "<gray>Chaque mort nourrit ta puissance..."
+      - ""
+      - "<dark_purple>✦ +2 cœurs par kill (cumulable)"
+      - "<red>✦ Perte totale si pièce retirée ou mort"
+      - ""
+      - "<dark_gray>ID: soul_armor"
+    trim:
+      enabled: true
+      material: amethyst
+      pattern: ward
+    helmet:
+      material: NETHERITE_HELMET
+      custom-model-data: 2031
+      color: null
+    chestplate:
+      material: NETHERITE_CHESTPLATE
+      custom-model-data: 2032
+      color: null
+    leggings:
+      material: NETHERITE_LEGGINGS
+      custom-model-data: 2033
+      color: null
+    boots:
+      material: NETHERITE_BOOTS
+      custom-model-data: 2034
+      color: null
+    enchantments:
+      PROTECTION: 4
+      DURABILITY: 10
+    hp-per-kill: 4.0        # 4 PV = 2 cœurs gagnés par kill
+
+    # ── Option Soul : Nombre maximum de cœurs bonus cumulables ──
+    # Exprime le nombre max de cœurs (ex: 10 cœurs = 20 PV max de bonus. Mettez 0 pour illimité).
+    max-bonus-hearts: 20
+
+    messages:
+      kill-bonus:    "<dark_purple>+2 cœurs ! <dark_gray>[<dark_purple>{total}<dark_gray> bonus actif(s)]"
+      reset-death:   "<dark_purple>💀 Âmes perdues à la mort."
+      reset-unequip: "<dark_purple>💔 Âmes libérées en retirant l'armure."

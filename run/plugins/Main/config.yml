@@ -1,0 +1,47 @@
+# =========================================
+#   Main - Configuration Globale
+# =========================================
+
+storage:
+  # Type: YAML ou MYSQL
+  type: YAML
+  mysql:
+    host: localhost
+    port: 3306
+    database: main
+    user: root
+    password: ""
+    useSSL: false
+    poolSize: 10
+
+# Active/désactive les modules au chargement (chaque module reste un jar séparé,
+# mais on peut le couper ici sans le retirer du serveur).
+modules:
+  oxygen: true
+  oxygen-armor: true
+  shop-admin: true
+  money: true
+  hdv: true
+  faction: true
+  weekly-quest: true
+  profile: true
+  home: true
+  Storm: true
+
+# Verrou tempête : modules à désactiver automatiquement tant qu'une tempête
+# (déclenchée par le module Storm) est en cours. Ils sont réactivés dès la fin
+# de la tempête, à condition d'être toujours autorisés dans "modules:" ci-dessus.
+# Seule la valeur "false" a un effet ici — inutile de lister un module à "true".
+storm-lockout:
+  shop-admin: false
+
+# Intégration avec le plugin de Misane (softdepend, optionnel)
+integration:
+  misane:
+    enabled: true
+    plugin-name: "NewV5"
+
+messages:
+  prefix: "<dark_gray>[<aqua>Main<dark_gray>] <gray>"
+  no-permission: "<red>Tu n'as pas la permission d'utiliser cette commande."
+  reload-success: "<green>La configuration a été rechargée."

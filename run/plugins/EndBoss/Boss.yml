@@ -1,0 +1,109 @@
+# =====================================================================
+#  EndBoss - Boss.yml
+#  Les clés absentes reprennent automatiquement leur valeur par défaut.
+#  /endboss reload pour recharger sans redémarrer.
+# =====================================================================
+boss:
+  name: "&4&l§k||&r &5&lEndBoss : Le Gardien du Vide &4&l§k||"
+  health: 800.0
+  speed: 0.36                  # vitesse de base, multipliée par le coefficient de phase
+  damage: 10.0                 # dégâts de base de la mêlée (s'ajoutent à ceux de l'arme), x coefficient de phase
+  damage-taken-multiplier: 0.6 # 0.6 = le boss subit 40% de dégâts en moins
+  ability-damage: 1.0          # multiplicateur global des capacités (mace smash, onde de choc, météores...)
+  single-instance: true        # refuse /endboss spawn si un boss est déjà actif
+
+  end-lock:
+    enabled: true
+    message: "&cLe portail de l'End est scellé par la magie noire de l'EndBoss ! Vainquez-le pour l'ouvrir."
+
+  dimension-lock:
+    enabled: true
+    message: "&cLe Nether est scellé par la magie noire de l'EndBoss ! Vainquez-le pour l'ouvrir."
+
+  regeneration:
+    enabled: false
+
+  equipment:
+    helmet: "DRAGON_HEAD"
+    chestplate: "NETHERITE_CHESTPLATE"
+    leggings: "NETHERITE_LEGGINGS"
+    boots: "NETHERITE_BOOTS"
+    weapon: "MACE"
+    offhand: "SHIELD"
+
+  # Loots personnalisés (les loots vanilla sont toujours supprimés)
+  # drops:
+  #   lingots:
+  #     material: NETHERITE_INGOT
+  #     amount: 4
+
+  display:
+    # Texte au-dessus de la tête. {hearts} = PV / 2 (cœurs), {hp} = PV bruts. Le nom + la phase sont dans la BossBar.
+    overhead-format: "&c❤ &f{hearts}"
+
+  shield:
+    damage-through: 0.12       # part des dégâts qui passent quand le boss garde (de face)
+
+  # Totems d'immortalité : un coup mortel est annulé, le boss est soigné et revient à la phase indiquée
+  # (count: 3 = trois vies). Désactivé ici, activé dans Impossible.yml.
+  totems:
+    enabled: false
+    count: 3
+    revive-to-phase: 2
+    message: "&6&l✦ TOTEM D'IMMORTALITÉ &e({left} restant(s))"
+
+  ai:
+    tick-interval: 2           # 2 = le cerveau réfléchit 10x par seconde
+    sight-range: 48.0
+    bar-range: 64.0
+    skill: 0.75                # 0..1 : chance de réussir esquives et gardes réflexes
+    adaptive-learning: true    # le boss apprend le style du joueur (arc, pillar, élytra)
+    dodge-projectiles: true
+    rest-regen-delay: 8.0      # secondes sans être touché avant de récupérer vite
+    rest-regen-percent: 3.0    # % de vie max récupéré par seconde quand on le laisse tranquille
+    minion-limit: 4
+
+  griefing:
+    break-blocks: true         # peut casser les blocs qui le gênent (restaurés ensuite, sans drop)
+    place-blocks: true         # peut poser ponts / pillars (disparaissent ensuite)
+    restore-seconds: 25
+    protected-materials:       # jamais cassés (en plus des blocs incassables et des conteneurs)
+      - DRAGON_EGG
+      - BEACON
+      - END_PORTAL_FRAME
+      - END_PORTAL
+      - END_GATEWAY
+
+  effects:
+    enabled: true
+    view-distance: 64.0
+    density: 1.0
+    max-displays: 320
+
+  phases:
+    phase-1:
+      name-suffix: " &7[Phase 1 - Éveil]"
+      health-threshold: 1.0
+      scale: 1.0
+      speed-multiplier: 1.0
+      damage-multiplier: 1.0
+      cooldown-multiplier: 1.0
+      abilities: [LEAP, DASH_STRIKE, SWORD_THROW, SHIELD_UP, BLINK, BLOCK_BARRAGE]
+    phase-2:
+      name-suffix: " &e[Phase 2 - Courroux]"
+      health-threshold: 0.66
+      scale: 1.35
+      speed-multiplier: 1.12
+      damage-multiplier: 1.25
+      cooldown-multiplier: 0.85
+      regen-per-second: 1.5     # PV/s en continu (0 = aucune)
+      abilities: [LEAP, DASH_STRIKE, SWORD_THROW, SHIELD_UP, BLINK, MACE_SMASH, SHOCKWAVE, SUMMON, BLOCK_BARRAGE, SKY_SLAM, ITEM_THEFT, SKY_RAPTURE, INVENTORY_SCRAMBLE]
+    phase-3:
+      name-suffix: " &4[Phase 3 - Calamité Finale]"
+      health-threshold: 0.33
+      scale: 1.75
+      speed-multiplier: 1.25
+      damage-multiplier: 1.5
+      cooldown-multiplier: 0.65
+      regen-per-second: 2.5
+      abilities: [LEAP, DASH_STRIKE, SWORD_THROW, SHIELD_UP, BLINK, MACE_SMASH, SHOCKWAVE, SUMMON, METEORS, BLOCK_BARRAGE, SKY_SLAM, ITEM_THEFT, SKY_RAPTURE, INVENTORY_SCRAMBLE]
