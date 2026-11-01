@@ -1,8 +1,11 @@
 package fr.zyumie.EndBoss.IA;
 
 import fr.zyumie.EndBoss.EndBossBar;
+import fr.zyumie.EndBoss.EndBossRegistry;
+import fr.zyumie.EndBoss.Main;
 import fr.zyumie.EndBoss.Listener.EndBossPhaseManager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,6 +18,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.WitherSkeleton;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -51,6 +55,7 @@ public class EndBossBrain {
     private final List<Entity> minions = new ArrayList<>();
     private final Random rng = new Random();
     private final int interval;
+    private final String profileName;
 
     private final EndBossBar bar;
     private final EndBossMovement movement;
@@ -63,6 +68,7 @@ public class EndBossBrain {
     private long lastHurt = -1000;
     private long idleTicks;
     private int shieldBlocks;
+    private int totemsLeft;
     private boolean shieldWasUp, shutdown;
     private Ability lastAbility;
     private Location lastSafe;
@@ -75,6 +81,16 @@ public class EndBossBrain {
     public EndBossBrain(JavaPlugin plugin, WitherSkeleton boss) {
         this.plugin = plugin;
         this.boss = boss;
+        this.profileName = boss.getPersistentDataContainer()
+                .getOrDefault(EndBossRegistry.profileKey(), PersistentDataType.STRING, "normal");
+
+        // Totems : lus sur l'entité pour ne pas se réinitialiser quand le chunk se recharge
+        Integer stored = boss.getPersistentDataContainer().get(EndBossRegistry.totemKey(), PersistentDataType.INTEGER);
+        if (stored == null) {
+            stored = cfg().getBoolean("boss.totems.enabled", false) ? cfg().getInt("boss.totems.count", 3) : 0;
+            boss.getPersistentDataContainer().set(EndBossRegistry.totemKey(), PersistentDataType.INTEGER, stored);
+        }
+        this.totemsLeft = stored;
         this.interval = Math.max(1, cfg().getInt("boss.ai.tick-interval", 2));
         this.bar = new EndBossBar("EndBoss", cfg().getDouble("boss.ai.bar-range", 64.0));
         this.scaffold = new EndBossScaffold(this);
@@ -87,7 +103,9 @@ public class EndBossBrain {
 
     // ------------------------------------------------------------------ accès
 
-    public FileConfiguration cfg() { return plugin.getConfig(); }
+    /** Config du profil de ce boss (Boss.yml, Impossible.yml...). */
+    public FileConfiguration cfg() { return ((Main) plugin).profile(profileName); }
+    public int totemsLeft() { return totemsLeft; }
     public EndBossPhaseManager phases() { return phases; }
     public EndBossMovement movement() { return movement; }
     public EndBossCombat combat() { return combat; }
@@ -234,6 +252,38 @@ public class EndBossBrain {
             lines.add("§7#" + (i + 1) + " §f" + (name != null ? name : "???") + " §8- §c" + Math.round(e.getValue()) + " dégâts");
         }
         return lines;
+    }
+
+    /**
+     * Totem d'immortalité : annule un coup mortel, soigne le boss et le ramène à la phase
+     * {@code boss.totems.revive-to-phase} (ex. 3 vies). Retourne false s'il n'y a plus de totem.
+     */
+    public boolean useTotem() {
+        if (totemsLeft <= 0 || !cfg().getBoolean("boss.totems.enabled", false)) return false;
+        totemsLeft--;
+        boss.getPersistentDataContainer().set(EndBossRegistry.totemKey(), PersistentDataType.INTEGER, totemsLeft);
+
+        int phase = Math.max(1, Math.min(3, cfg().getInt("boss.totems.revive-to-phase", 2)));
+        boss.setHealth(Math.max(1.0, Math.min(maxHealth(), maxHealth() * phases.reviveFraction(phase))));
+        phases.forcePhase(phase);
+
+        // on repart de zéro : plus de garde, cooldowns remis à neuf
+        cooldowns.clear();
+        shieldUntil = now;
+        shieldWasUp = false;
+        shieldBlocks = 0;
+
+        Location loc = boss.getLocation();
+        boss.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, loc.clone().add(0, 1, 0), 200, 1.2, 1.5, 1.2, 0.6);
+        boss.getWorld().playSound(loc, Sound.ITEM_TOTEM_USE, 3.0f, 0.7f);
+
+        String msg = ChatColor.translateAlternateColorCodes('&', cfg()
+                .getString("boss.totems.message", "&6&l✦ TOTEM D'IMMORTALITÉ &e({left} restant(s))")
+                .replace("{left}", String.valueOf(totemsLeft)));
+        for (Player p : boss.getWorld().getNearbyPlayers(loc, cfg().getDouble("boss.ai.bar-range", 64.0))) {
+            p.sendTitle(msg, "", 5, 50, 15);
+        }
+        return true;
     }
 
     /** Chute dans le vide (ponts détruits, etc.) : retour au dernier point sûr. */

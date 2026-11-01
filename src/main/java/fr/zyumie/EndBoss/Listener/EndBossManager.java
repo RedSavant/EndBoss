@@ -2,6 +2,7 @@ package fr.zyumie.EndBoss.Listener;
 
 import fr.zyumie.EndBoss.EndBossRegistry;
 import fr.zyumie.EndBoss.IA.EndBossBrain;
+import fr.zyumie.EndBoss.Main;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -19,11 +20,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class EndBossManager {
 
-    public static WitherSkeleton spawnEndBoss(JavaPlugin plugin, Location loc) {
-        FileConfiguration cfg = plugin.getConfig();
+    public static WitherSkeleton spawnEndBoss(Main plugin, Location loc, String profile) {
+        String profileName = profile == null || profile.isBlank() ? "normal" : profile.toLowerCase();
+        FileConfiguration cfg = plugin.profile(profileName);
         WitherSkeleton boss = (WitherSkeleton) loc.getWorld().spawnEntity(loc, EntityType.WITHER_SKELETON);
 
         boss.getPersistentDataContainer().set(EndBossRegistry.key(), PersistentDataType.BYTE, (byte) 1);
+        boss.getPersistentDataContainer().set(EndBossRegistry.profileKey(), PersistentDataType.STRING, profileName);
         boss.setCustomName(ChatColor.translateAlternateColorCodes('&', cfg.getString("boss.name", "&4EndBoss")));
         boss.setCustomNameVisible(true);
         boss.setRemoveWhenFarAway(false);

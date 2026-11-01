@@ -76,7 +76,22 @@ public class EndBossPhaseManager {
 
     public String displayName() {
         String base = brain.cfg().getString("boss.name", "&4EndBoss");
-        return ChatColor.translateAlternateColorCodes('&', base) + suffix;
+        String name = ChatColor.translateAlternateColorCodes('&', base) + suffix;
+        int totems = brain.totemsLeft();
+        if (totems > 0) name += ChatColor.translateAlternateColorCodes('&', " &6[Totems : " + totems + "]");
+        return name;
+    }
+
+    /** Impose une phase (totem d'immortalité) avec la transition complète. */
+    public void forcePhase(int phase) {
+        enter(phase, true);
+    }
+
+    /** Fraction de vie au milieu de la plage de la phase : là où le boss revient après un totem. */
+    public double reviveFraction(int phase) {
+        double top = threshold(phase);
+        double bottom = phase >= 3 ? 0.0 : threshold(phase + 1);
+        return (top + bottom) / 2.0;
     }
 
     /** Vérifie la phase selon les PV. Appelé à chaque tick du cerveau. */

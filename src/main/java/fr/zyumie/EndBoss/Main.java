@@ -25,15 +25,19 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Main extends JavaPlugin implements CommandExecutor, TabCompleter {
 
     private FileConfiguration bossConfig;
+    private final Map<String, FileConfiguration> profiles = new HashMap<>();
 
     @Override
     public void onEnable() {
         reloadConfig(); // charge Boss.yml
+        if (!new File(getDataFolder(), "Impossible.yml").exists()) saveResource("Impossible.yml", false);
         EndBossRegistry.init(this);
         BlockRestorer.init(this);
 
@@ -69,6 +73,7 @@ public class Main extends JavaPlugin implements CommandExecutor, TabCompleter {
         File file = new File(getDataFolder(), "Boss.yml");
         if (!file.exists()) saveResource("Boss.yml", false);
         bossConfig = YamlConfiguration.loadConfiguration(file);
+        profiles.clear();
 
         // Les clés absentes d'un ancien Boss.yml reprennent la valeur par défaut du jar
         try (InputStream in = getResource("Boss.yml")) {
@@ -78,6 +83,45 @@ public class Main extends JavaPlugin implements CommandExecutor, TabCompleter {
         } catch (IOException ex) {
             getLogger().warning("Impossible de lire les valeurs par défaut de Boss.yml : " + ex.getMessage());
         }
+    }
+
+    /**
+     * Profil de difficulté : "normal" = Boss.yml, "impossible" = Impossible.yml, ou tout autre fichier
+     * Nom.yml placé dans le dossier du plugin. Les clés absentes reprennent les valeurs de Boss.yml.
+     */
+    public FileConfiguration profile(String name) {
+        if (name == null || name.isBlank() || name.equalsIgnoreCase("normal") || name.equalsIgnoreCase("boss")) {
+            return getConfig();
+        }
+        String key = name.toLowerCase();
+        FileConfiguration cached = profiles.get(key);
+        if (cached != null) return cached;
+        FileConfiguration loaded = loadProfile(key);
+        profiles.put(key, loaded);
+        return loaded;
+    }
+
+    private FileConfiguration loadProfile(String key) {
+        if (!key.matches("[a-z0-9_-]+")) return getConfig();
+        String fileName = Character.toUpperCase(key.charAt(0)) + key.substring(1) + ".yml";
+        File file = new File(getDataFolder(), fileName);
+        if (!file.exists() && getResource(fileName) != null) saveResource(fileName, false);
+        if (!file.exists()) {
+            getLogger().warning("Profil introuvable : " + fileName + " (Boss.yml utilisé à la place)");
+            return getConfig();
+        }
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration jarDefaults = new YamlConfiguration();
+        try (InputStream in = getResource(fileName)) {
+            if (in != null) {
+                jarDefaults = YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+            }
+        } catch (IOException ex) {
+            getLogger().warning("Impossible de lire " + fileName + " dans le jar : " + ex.getMessage());
+        }
+        jarDefaults.setDefaults(getConfig()); // jar du profil, puis Boss.yml
+        cfg.setDefaults(jarDefaults);
+        return cfg;
     }
 
     @Override
@@ -101,13 +145,18 @@ public class Main extends JavaPlugin implements CommandExecutor, TabCompleter {
                     sender.sendMessage("Seul un joueur peut exécuter cette commande.");
                     return true;
                 }
-                boolean force = args.length > 1 && args[1].equalsIgnoreCase("force");
+                boolean force = false;
+                String profileName = "normal";
+                for (int i = 1; i < args.length; i++) {
+                    if (args[i].equalsIgnoreCase("force")) force = true;
+                    else profileName = args[i].toLowerCase();
+                }
                 if (!force && getConfig().getBoolean("boss.single-instance", true) && EndBossRegistry.isBossAlive()) {
                     player.sendMessage(ChatColor.RED + "Un EndBoss est déjà actif. /endboss kill pour le retirer, ou /endboss spawn force.");
                     return true;
                 }
-                EndBossManager.spawnEndBoss(this, player.getLocation());
-                player.sendMessage(ChatColor.DARK_RED + "L'EndBoss ultime a été invoqué !");
+                EndBossManager.spawnEndBoss(this, player.getLocation(), profileName);
+                player.sendMessage(ChatColor.DARK_RED + "L'EndBoss ultime a été invoqué ! (profil : " + profileName + ")");
             }
             case "kill" -> {
                 int removed = 0;
@@ -147,10 +196,11 @@ public class Main extends JavaPlugin implements CommandExecutor, TabCompleter {
                     sender.sendMessage(ChatColor.GOLD + "EndBoss " + ChatColor.WHITE
                             + Math.round(b.boss.getHealth()) + "/" + Math.round(b.maxHealth()) + " PV"
                             + " | phase " + b.phases().current()
+                            + " | totems " + b.totemsLeft()
                             + " | cible : " + (b.target() != null ? b.target().getName() : "aucune"));
                 }
             }
-            default -> sender.sendMessage(ChatColor.YELLOW + "Usage : /endboss <spawn [force]|kill|reload|status|unlock>");
+            default -> sender.sendMessage(ChatColor.YELLOW + "Usage : /endboss <spawn [impossible] [force]|kill|reload|status|unlock>");
         }
         return true;
     }
@@ -162,8 +212,10 @@ public class Main extends JavaPlugin implements CommandExecutor, TabCompleter {
             for (String s : List.of("spawn", "kill", "reload", "status", "unlock")) {
                 if (s.startsWith(args[0].toLowerCase())) out.add(s);
             }
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("spawn") && "force".startsWith(args[1].toLowerCase())) {
-            out.add("force");
+        } else if (args.length >= 2 && args[0].equalsIgnoreCase("spawn")) {
+            for (String s : List.of("impossible", "normal", "force")) {
+                if (s.startsWith(args[args.length - 1].toLowerCase())) out.add(s);
+            }
         }
         return out;
     }

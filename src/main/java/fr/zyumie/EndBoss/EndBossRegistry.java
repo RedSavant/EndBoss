@@ -26,19 +26,31 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class EndBossRegistry {
 
     private static final Map<UUID, EndBossBrain> BRAINS = new ConcurrentHashMap<>();
-    private static NamespacedKey key;
+    private static NamespacedKey key, profileKey, totemKey;
     private static boolean bossAlive = false;
 
     private EndBossRegistry() {}
 
     public static void init(JavaPlugin plugin) {
         key = new NamespacedKey(plugin, "is_endboss");
+        profileKey = new NamespacedKey(plugin, "profile");
+        totemKey = new NamespacedKey(plugin, "totems");
         File f = new File(plugin.getDataFolder(), "state.yml");
         bossAlive = YamlConfiguration.loadConfiguration(f).getBoolean("boss-alive", false);
     }
 
     public static NamespacedKey key() {
         return key;
+    }
+
+    /** Profil de difficulté du boss (normal, impossible...). Stocké sur l'entité. */
+    public static NamespacedKey profileKey() {
+        return profileKey;
+    }
+
+    /** Nombre de totems restants, stocké sur l'entité (pas de reset en déchargeant le chunk). */
+    public static NamespacedKey totemKey() {
+        return totemKey;
     }
 
     public static boolean hasTag(Entity e) {

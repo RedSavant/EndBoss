@@ -54,12 +54,12 @@ public class EndBossListener implements Listener {
         if (attacker == null) return;
 
         boolean melee = event.getDamager() instanceof Player;
-        double dmg = event.getDamage() * plugin.getConfig().getDouble("boss.damage-taken-multiplier", 0.6);
+        double dmg = event.getDamage() * brain.cfg().getDouble("boss.damage-taken-multiplier", 0.6);
         boolean blocked = false;
 
         if (brain.isShielding() && brain.isInFront(event.getDamager().getLocation())) {
             blocked = true;
-            dmg *= plugin.getConfig().getDouble("boss.shield.damage-through", 0.12);
+            dmg *= brain.cfg().getDouble("boss.shield.damage-through", 0.12);
             Location at = brain.boss.getLocation().add(0, 1, 0);
             brain.boss.getWorld().playSound(at, Sound.ITEM_SHIELD_BLOCK, 1.2f, 1.0f);
             brain.boss.getWorld().spawnParticle(Particle.CRIT, at, 10, 0.3, 0.3, 0.3, 0.1);
@@ -72,6 +72,16 @@ public class EndBossListener implements Listener {
 
         event.setDamage(dmg);
         brain.onDamaged(attacker, dmg, melee, blocked);
+    }
+
+    /** Totem d'immortalité : un coup mortel est annulé tant qu'il reste des totems. */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBossLethal(EntityDamageEvent event) {
+        EndBossBrain brain = EndBossRegistry.get(event.getEntity());
+        if (brain == null) return;
+        if (event.getFinalDamage() >= brain.boss.getHealth() && brain.useTotem()) {
+            event.setCancelled(true);
+        }
     }
 
     /** Le boss garde la cible choisie par son cerveau (les goals vanilla ne changent plus de cible). */
@@ -146,7 +156,7 @@ public class EndBossListener implements Listener {
 
         // Aucun loot vanilla, uniquement ceux définis dans Boss.yml
         event.getDrops().clear();
-        ConfigurationSection drops = plugin.getConfig().getConfigurationSection("boss.drops");
+        ConfigurationSection drops = brain.cfg().getConfigurationSection("boss.drops");
         if (drops != null) {
             for (String key : drops.getKeys(false)) {
                 Material mat = Material.matchMaterial(drops.getString(key + ".material", "DIAMOND"));
